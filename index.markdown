@@ -319,7 +319,7 @@ main.page-content {
 
   scholarStatus.textContent = "Syncing with Google Scholar…";
 
-  var endpoint = "https://serpapi.com/search.json?engine=google_scholar_profile&hl=en&author_id=" +
+  var endpoint = "https://serpapi.com/search.json?engine=google_scholar_author&hl=en&author_id=" +
     encodeURIComponent(scholarId) + "&api_key=" + encodeURIComponent(serpApiKey);
 
   fetch(endpoint)
@@ -330,9 +330,12 @@ main.page-content {
     .then(function (payload) {
       var statsRow = payload.cited_by && payload.cited_by.table ? payload.cited_by.table[0] : null;
       if (statsRow) {
-        citationsEl.textContent = statsRow.citations || "--";
-        hindexEl.textContent = statsRow.h_index || "--";
-        i10El.textContent = statsRow.i10_index || "--";
+        var citations = statsRow.citations && statsRow.citations.all;
+        var hIndex = statsRow.h_index && statsRow.h_index.all;
+        var i10 = statsRow.i10_index && statsRow.i10_index.all;
+        citationsEl.textContent = citations || "--";
+        hindexEl.textContent = hIndex || "--";
+        i10El.textContent = i10 || "--";
       }
 
       if (Array.isArray(payload.articles) && payload.articles.length) {
