@@ -1,7 +1,7 @@
 layout: default
-title: "Minggu Wang · AI Research"
+title: ""
 scholar_profile_id: "YOUR_SCHOLAR_ID"
-scholar_profile_url: "https://scholar.google.com/citations?user=YOUR_SCHOLAR_ID"
+scholar_profile_url: "https://scholar.google.com/citations?user=1xge3_oAAAAJ"
 serpapi_api_key: ""
 ---
 
