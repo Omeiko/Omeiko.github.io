@@ -2,7 +2,7 @@
 layout: default
 title: "Minggu Wang"
 description: "AI researcher building reliable multimodal systems."
-scholar_profile_id: "YOUR_SCHOLAR_ID"
+scholar_profile_id: "1xge3_oAAAAJ"
 scholar_profile_url: "https://scholar.google.com/citations?user=1xge3_oAAAAJ"
 serpapi_api_key: "cac750773bd39e6a6011f2869bc363573787f440201f6aa4b2289aa1b891283b"
 ---
