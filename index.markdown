@@ -9,10 +9,18 @@ serpapi_api_key: "cac750773bd39e6a6011f2869bc363573787f440201f6aa4b2289aa1b89128
 
 <style>
 :root {
-  --ink: #1d2330;
-  --muted: #6f778b;
-  --border: #e6e9f2;
-  --accent: #2454ff;
+  --ink: #1d1d1f;
+  --muted: #6e6e73;
+  --border: #e5e5ea;
+  --accent: #0071e3;
+  --paper: #ffffff;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0;
 }
 
 main.page-content {
@@ -20,21 +28,52 @@ main.page-content {
 }
 
 .intro {
-  max-width: 700px;
-  margin: 0 auto 2.5rem;
+  max-width: 720px;
+  margin: 0 auto 2.8rem;
   text-align: center;
+}
+
+.intro__crest {
+  width: min(220px, 60%);
+  margin: 0 auto 1.6rem;
+  padding: 0.9rem;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top, rgba(36, 84, 255, 0.18), transparent 70%),
+    linear-gradient(140deg, #ffffff, #f2f4ff);
+  box-shadow:
+    0 20px 40px rgba(36, 84, 255, 0.12),
+    inset 0 0 0 1px rgba(36, 84, 255, 0.1);
+  position: relative;
+}
+
+.intro__crest::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 22px;
+  border: 1px dashed rgba(36, 84, 255, 0.18);
+  pointer-events: none;
+}
+
+.intro__crest img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 18px;
 }
 
 .intro__hello {
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.75rem;
-  color: var(--accent);
+  letter-spacing: 0.22em;
+  font-size: 0.68rem;
+  color: var(--muted);
 }
 
 .intro h1 {
-  margin: 0.4rem 0;
-  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0.5rem 0 0.8rem;
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  font-weight: 600;
 }
 
 .intro p {
@@ -58,7 +97,7 @@ main.page-content {
   text-decoration: none;
   color: var(--ink);
   font-weight: 600;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .button-link--primary {
@@ -68,12 +107,13 @@ main.page-content {
 }
 
 .button-link:hover {
-  background: #f5f6ff;
-  color: var(--accent);
+  background: #f5f5f7;
+  color: var(--ink);
+  border-color: #d2d2d7;
 }
 
 .button-link--primary:hover {
-  background: var(--accent);
+  background: #0a0a0a;
 }
 
 .layout {
@@ -87,20 +127,59 @@ main.page-content {
 
 .card {
   border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 1.75rem;
-  background: #fff;
-  box-shadow: 0 10px 25px rgba(31, 42, 77, 0.08);
+  border-radius: 20px;
+  padding: 1.9rem;
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.06);
 }
 
 .card h2 {
   margin-top: 0;
+  font-weight: 600;
 }
 
 .scholar-status {
   font-size: 0.9rem;
   color: var(--muted);
   margin-bottom: 1rem;
+}
+
+.intro__crest {
+  width: min(210px, 60%);
+  margin: 0 auto 1.6rem;
+  padding: 1.05rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 35%, #f5f5f7, #ffffff 70%);
+  box-shadow:
+    0 18px 35px rgba(0, 0, 0, 0.08),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.intro__crest::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+}
+
+.intro__crest::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border-radius: 999px;
+  border: 1px dashed rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+}
+
+.intro__crest img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 999px;
+  filter: saturate(1.02);
 }
 
 .scholar-metrics {
@@ -210,6 +289,9 @@ main.page-content {
 </style>
 
 <section class="intro">
+  <div class="intro__crest">
+    <img src="{{ '/pics/image.png' | relative_url }}" alt="Crest logo" />
+  </div>
   <p class="intro__hello">Hello, I’m Minggu</p>
   <h1>AI researcher shaping calm, trustworthy tools.</h1>
   <p>
