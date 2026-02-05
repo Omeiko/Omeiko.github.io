@@ -150,30 +150,10 @@ main.page-content {
   padding: 0.9rem;
   border-radius: 999px;
   background: radial-gradient(circle at 50% 35%, #f7f7f9, #ffffff 70%);
-  box-shadow:
-    0 12px 26px rgba(0, 0, 0, 0.08),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
   position: relative;
   display: block;
   text-align: center;
-}
-
-.intro__crest::before {
-  content: "";
-  position: absolute;
-  inset: 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  pointer-events: none;
-}
-
-.intro__crest::after {
-  content: "";
-  position: absolute;
-  inset: 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.03);
-  pointer-events: none;
 }
 
 .intro__crest img {
