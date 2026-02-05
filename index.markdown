@@ -154,6 +154,8 @@ main.page-content {
     0 18px 35px rgba(0, 0, 0, 0.08),
     inset 0 0 0 1px rgba(0, 0, 0, 0.04);
   position: relative;
+  display: block;
+  text-align: center;
 }
 
 .intro__crest::before {
