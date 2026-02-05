@@ -29,7 +29,7 @@ main.page-content {
 
 .intro {
   max-width: 720px;
-  margin: 0 auto 2.8rem;
+  margin: 0 auto 2.2rem;
   text-align: center;
 }
 
@@ -145,13 +145,13 @@ main.page-content {
 }
 
 .intro__crest {
-  width: min(210px, 60%);
-  margin: 0 auto 1.6rem;
-  padding: 1.05rem;
+  width: min(200px, 58%);
+  margin: 0 auto 1rem;
+  padding: 0.9rem;
   border-radius: 999px;
-  background: radial-gradient(circle at 50% 35%, #f5f5f7, #ffffff 70%);
+  background: radial-gradient(circle at 50% 35%, #f7f7f9, #ffffff 70%);
   box-shadow:
-    0 18px 35px rgba(0, 0, 0, 0.08),
+    0 12px 26px rgba(0, 0, 0, 0.08),
     inset 0 0 0 1px rgba(0, 0, 0, 0.04);
   position: relative;
   display: block;
@@ -163,16 +163,16 @@ main.page-content {
   position: absolute;
   inset: 10px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
   pointer-events: none;
 }
 
 .intro__crest::after {
   content: "";
   position: absolute;
-  inset: 18px;
+  inset: 16px;
   border-radius: 999px;
-  border: 1px dashed rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.03);
   pointer-events: none;
 }
 
