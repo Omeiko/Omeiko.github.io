@@ -1,0 +1,29 @@
+{
+  "name": "omeiko-site-manager",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names api,web --prefix-colors blue,green \"node --watch server.mjs\" \"vite --host 127.0.0.1\"",
+    "build": "vite build",
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "dompurify": "3.4.12",
+    "express": "5.2.1",
+    "gray-matter": "4.0.3",
+    "lucide-react": "1.28.0",
+    "marked": "18.0.7",
+    "multer": "2.2.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.0.5",
+    "concurrently": "10.0.4",
+    "vite": "8.2.0"
+  }
+}
