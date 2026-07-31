@@ -4,7 +4,6 @@ title: "Minggu Wang"
 description: "AI researcher building reliable multimodal systems."
 scholar_profile_id: "1xge3_oAAAAJ"
 scholar_profile_url: "https://scholar.google.com/citations?user=1xge3_oAAAAJ"
-serpapi_api_key: "cac750773bd39e6a6011f2869bc363573787f440201f6aa4b2289aa1b891283b"
 ---
 
 <style>
@@ -308,26 +307,37 @@ main.page-content {
 
   <section class="card">
     <h2>Scholar snapshot</h2>
-    <p class="scholar-status" id="scholar-status">
-      Provide your Google Scholar ID and SerpAPI key in the page front matter to enable live stats.
-    </p>
+    {% assign scholar = site.data.scholar %}
+    {% if scholar %}
+    <p class="scholar-status">Updated automatically from Google Scholar.</p>
     <div class="scholar-metrics">
       <div class="scholar-metric">
         <span class="scholar-metric__label">Citations</span>
-        <span class="scholar-metric__value" id="scholar-citations">--</span>
+        <span class="scholar-metric__value">{{ scholar.citations }}</span>
       </div>
       <div class="scholar-metric">
         <span class="scholar-metric__label">h-index</span>
-        <span class="scholar-metric__value" id="scholar-hindex">--</span>
+        <span class="scholar-metric__value">{{ scholar.h_index }}</span>
       </div>
       <div class="scholar-metric">
         <span class="scholar-metric__label">i10-index</span>
-        <span class="scholar-metric__value" id="scholar-i10">--</span>
+        <span class="scholar-metric__value">{{ scholar.i10_index }}</span>
       </div>
     </div>
-    <ul class="scholar-feed" id="scholar-feed">
-      <li><strong>Awaiting data</strong><p>Add your credentials to fetch recent papers automatically.</p></li>
+    <ul class="scholar-feed">
+      {% for article in scholar.articles %}
+      <li>
+        <strong><a href="{{ article.link | escape }}" target="_blank" rel="noopener">{{ article.title }}</a></strong>
+        <p>Citations: {{ article.citations }}{% if article.publication %} · {{ article.publication }}{% elsif article.year %} · {{ article.year }}{% endif %}</p>
+      </li>
+      {% endfor %}
     </ul>
+    {% else %}
+    <p class="scholar-status">Scholar data will appear after the update workflow runs.</p>
+    {% endif %}
+    <div class="intro__links" style="justify-content:flex-start;margin-top:1.25rem;">
+      <a class="button-link" href="{{ page.scholar_profile_url }}" target="_blank" rel="noopener">View Google Scholar</a>
+    </div>
   </section>
 
   <section class="card">
@@ -360,67 +370,3 @@ main.page-content {
     </p>
   </section>
 </div>
-
-<script>
-(function () {
-  var scholarId = "{{ page.scholar_profile_id }}";
-  var serpApiKey = "{{ page.serpapi_api_key }}";
-  var scholarStatus = document.getElementById("scholar-status");
-  var citationsEl = document.getElementById("scholar-citations");
-  var hindexEl = document.getElementById("scholar-hindex");
-  var i10El = document.getElementById("scholar-i10");
-  var feedEl = document.getElementById("scholar-feed");
-
-  if (!scholarId || scholarId === "YOUR_SCHOLAR_ID") {
-    scholarStatus.textContent = "Set `scholar_profile_id` in index.markdown to enable updates.";
-    return;
-  }
-
-  if (!serpApiKey) {
-    scholarStatus.textContent = "Add a SerpAPI key (https://serpapi.com/) to stream Google Scholar stats.";
-    return;
-  }
-
-  scholarStatus.textContent = "Syncing with Google Scholar…";
-
-  var endpoint = "https://serpapi.com/search.json?engine=google_scholar_author&hl=en&author_id=" +
-    encodeURIComponent(scholarId) + "&api_key=" + encodeURIComponent(serpApiKey);
-
-  fetch(endpoint)
-    .then(function (resp) {
-      if (!resp.ok) throw new Error("Scholar request failed");
-      return resp.json();
-    })
-    .then(function (payload) {
-      var statsRow = payload.cited_by && payload.cited_by.table ? payload.cited_by.table[0] : null;
-      if (statsRow) {
-        var citations = statsRow.citations && statsRow.citations.all;
-        var hIndex = statsRow.h_index && statsRow.h_index.all;
-        var i10 = statsRow.i10_index && statsRow.i10_index.all;
-        citationsEl.textContent = citations || "--";
-        hindexEl.textContent = hIndex || "--";
-        i10El.textContent = i10 || "--";
-      }
-
-      if (Array.isArray(payload.articles) && payload.articles.length) {
-        feedEl.innerHTML = "";
-        payload.articles.slice(0, 4).forEach(function (article) {
-          var link = article.link || "{{ page.scholar_profile_url }}";
-          var title = article.title || "Untitled";
-          var citations = article.cited_by && article.cited_by.value ? article.cited_by.value : 0;
-          var meta = [article.publication, article.year].filter(Boolean).join(" · ");
-          var li = document.createElement("li");
-          li.innerHTML = "<strong><a href=\"" + link + "\" target=\"_blank\" rel=\"noopener\">" +
-            title + "</a></strong><p>Citations: " + citations + (meta ? " · " + meta : "") + "</p>";
-          feedEl.appendChild(li);
-        });
-      }
-
-      scholarStatus.textContent = "Last refreshed " + new Date().toLocaleString();
-    })
-    .catch(function (err) {
-      console.error(err);
-      scholarStatus.textContent = "Unable to update Scholar data. Check API quota or ID.";
-    });
-})();
-</script>

@@ -1,0 +1,21 @@
+{
+  "citations": 18,
+  "h_index": 1,
+  "i10_index": 1,
+  "articles": [
+    {
+      "title": "QuanBench: Benchmarking Quantum Code Generation with Large Language Models",
+      "link": "https://scholar.google.com/citations?view_op=view_citation&hl=en&user=1xge3_oAAAAJ&citation_for_view=1xge3_oAAAAJ:u-x6o8ySG0sC",
+      "publication": "arXiv preprint arXiv:2510.16779, 2025",
+      "year": "2025",
+      "citations": 17
+    },
+    {
+      "title": "Zero-shot Face Editing via ID-Attribute Decoupled Inversion",
+      "link": "https://scholar.google.com/citations?view_op=view_citation&hl=en&user=1xge3_oAAAAJ&citation_for_view=1xge3_oAAAAJ:u5HHmVD_uO8C",
+      "publication": "2025 IEEE International Conference on Multimedia and Expo (ICME), 1-6, 2025",
+      "year": "2025",
+      "citations": 1
+    }
+  ]
+}
