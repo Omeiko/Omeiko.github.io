@@ -270,17 +270,15 @@ main.page-content {
 </style>
 
 <section class="intro">
+  {% assign profile = site.data.profile %}
   <div class="intro__crest">
-    <img src="{{ '/pics/image.png' | relative_url }}" alt="Crest logo" />
+    <img src="{{ profile.crest | relative_url }}" alt="{{ profile.name }} crest" />
   </div>
-  <p class="intro__hello">Hello, I’m Minggu</p>
-  <h1>AI researcher shaping calm, trustworthy tools.</h1>
-  <p>
-    I study multimodal models and their applications to scientific discovery. Recently, I have been helping robotics teams
-    bring language-to-action systems into real labs, while publishing about evaluation and alignment.
-  </p>
+  <p class="intro__hello">{{ profile.greeting }}</p>
+  <h1>{{ profile.headline }}</h1>
+  <p>{{ profile.summary }}</p>
   <div class="intro__links">
-    <a class="button-link button-link--primary" href="mailto:{{ site.email | default: 'your-email@example.com' }}">Email me</a>
+    <a class="button-link button-link--primary" href="mailto:{{ profile.email }}">Email me</a>
     <a class="button-link" href="/blog/">Read the blog</a>
     <a class="button-link" href="{{ site.url | default: '/' }}about/">More about me</a>
   </div>
@@ -291,17 +289,16 @@ main.page-content {
     <h2>What I focus on</h2>
     <div class="two-column">
       <div>
-        <p><strong>Research ·</strong> Multimodal reasoning, embodied autonomy, evaluation frameworks.</p>
+        <p><strong>Research ·</strong> {{ profile.research }}</p>
       </div>
       <div>
-        <p><strong>Collaboration ·</strong> Industry labs, open-source communities, and student mentorships.</p>
+        <p><strong>Collaboration ·</strong> {{ profile.collaboration }}</p>
       </div>
     </div>
     <ul class="tag-list">
-      <li>Robotics</li>
-      <li>LLM safety</li>
-      <li>Scientific AI</li>
-      <li>Open-source</li>
+      {% for tag in profile.tags %}
+      <li>{{ tag }}</li>
+      {% endfor %}
     </ul>
   </section>
 
@@ -364,9 +361,6 @@ main.page-content {
 
   <section class="card">
     <h2>Currently</h2>
-    <p>
-      Building lightweight eval suites for embodied models, mentoring two graduate students on generalizable manipulation policies,
-      and exploring how AI can support sustainable lab workflows.
-    </p>
+    <p>{{ profile.current }}</p>
   </section>
 </div>

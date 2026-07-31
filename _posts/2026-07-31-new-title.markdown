@@ -1,0 +1,12 @@
+---
+layout: post
+title: new title
+date: '2026-07-31 12:00:00 +0900'
+categories:
+  - diary
+---
+# Start with one clear idea
+
+Write your article here.
+
+Hello, this is a test
