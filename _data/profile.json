@@ -1,6 +1,6 @@
 {
-  "name": "Minggu",
-  "greeting": "Hello, I’m Minggu",
+  "name": "Guzi",
+  "greeting": "Come in and have a seat.",
   "headline": "AI researcher shaping calm, trustworthy tools.",
   "summary": "I study multimodal models and their applications to scientific discovery. Recently, I have been helping robotics teams bring language-to-action systems into real labs, while publishing about evaluation and alignment.",
   "email": "wangminggu[at]outlook.com",
@@ -10,8 +10,6 @@
   "current": "Building lightweight eval suites for embodied models, mentoring two graduate students on generalizable manipulation policies, and exploring how AI can support sustainable lab workflows.",
   "tags": [
     "Robotics",
-    "LLM safety",
-    "Scientific AI",
-    "Open-source"
+    "AI safety"
   ]
 }
