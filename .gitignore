@@ -1,3 +1,8 @@
 Gemfile.lock
+.bundle/
+vendor/
+tmp/
+_site/
+.DS_Store
 manager/node_modules/
 manager/dist/

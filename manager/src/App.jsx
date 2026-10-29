@@ -27,6 +27,7 @@ import { api } from "./api.js";
 const navigation = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "profile", label: "Profile", icon: UserRound },
+  { id: "publications", label: "Publications", icon: BookOpenText },
   { id: "blog", label: "Writing", icon: NotebookPen },
   { id: "scholar", label: "Scholar", icon: GraduationCap },
   { id: "publish", label: "Publish", icon: Rocket }
@@ -54,6 +55,26 @@ function emptyPost() {
     categories: [],
     draft: true,
     body: "# Start with one clear idea\n\nWrite your article here."
+  };
+}
+
+function emptyPublication() {
+  return {
+    slug: "",
+    title: "",
+    scholar_title: "",
+    authors: [],
+    venue: "",
+    venue_short: "",
+    year: new Date().getFullYear(),
+    pages: "",
+    doi: "",
+    arxiv_url: "",
+    summary: "",
+    topics: [],
+    bibtex_key: "",
+    selected: true,
+    status: "Published"
   };
 }
 
@@ -205,7 +226,7 @@ function Field({ label, hint, children, wide = false }) {
   );
 }
 
-function ProfileEditor({ profile, setProfile, onSave, onUpload, busy }) {
+function ProfileEditor({ profile, setProfile, onSave, onUpload, onUploadCv, busy }) {
   const update = (field, value) => setProfile((current) => ({ ...current, [field]: value }));
   return (
     <div className="page-stack">
@@ -219,16 +240,41 @@ function ProfileEditor({ profile, setProfile, onSave, onUpload, busy }) {
       <section className="panel form-panel">
         <div className="form-grid">
           <Field label="Display name"><input value={profile.name || ""} onChange={(event) => update("name", event.target.value)} /></Field>
+          <Field label="Nickname"><input value={profile.nickname || ""} onChange={(event) => update("nickname", event.target.value)} /></Field>
           <Field label="Greeting"><input value={profile.greeting || ""} onChange={(event) => update("greeting", event.target.value)} /></Field>
           <Field label="Headline" wide><input value={profile.headline || ""} onChange={(event) => update("headline", event.target.value)} /></Field>
           <Field label="Introduction" wide><textarea rows="5" value={profile.summary || ""} onChange={(event) => update("summary", event.target.value)} /></Field>
           <Field label="Email"><input type="email" value={profile.email || ""} onChange={(event) => update("email", event.target.value)} /></Field>
+          <Field label="Role"><input value={profile.role || ""} onChange={(event) => update("role", event.target.value)} /></Field>
+          <Field label="Affiliation"><input value={profile.affiliation || ""} onChange={(event) => update("affiliation", event.target.value)} /></Field>
           <Field label="Research focus"><input value={profile.research || ""} onChange={(event) => update("research", event.target.value)} /></Field>
           <Field label="Collaboration" wide><input value={profile.collaboration || ""} onChange={(event) => update("collaboration", event.target.value)} /></Field>
           <Field label="Topics" hint="Separate topics with commas." wide>
             <input value={(profile.tags || []).join(", ")} onChange={(event) => update("tags", event.target.value.split(",").map((tag) => tag.trim()).filter(Boolean))} />
           </Field>
           <Field label="Currently" wide><textarea rows="4" value={profile.current || ""} onChange={(event) => update("current", event.target.value)} /></Field>
+          <Field label="Google Scholar URL"><input type="url" value={profile.scholar_url || ""} onChange={(event) => update("scholar_url", event.target.value)} /></Field>
+          <Field label="OpenAlex URL"><input type="url" value={profile.openalex_url || ""} onChange={(event) => update("openalex_url", event.target.value)} /></Field>
+          <Field label="Conference profile URL"><input type="url" value={profile.conference_url || ""} onChange={(event) => update("conference_url", event.target.value)} /></Field>
+          <Field label="GitHub URL"><input type="url" value={profile.github_url || ""} onChange={(event) => update("github_url", event.target.value)} /></Field>
+          <Field label="ORCID URL" hint="Leave empty until the identifier is verified."><input type="url" value={profile.orcid_url || ""} onChange={(event) => update("orcid_url", event.target.value)} /></Field>
+          <Field label="DBLP URL" hint="Leave empty until the author record is verified."><input type="url" value={profile.dblp_url || ""} onChange={(event) => update("dblp_url", event.target.value)} /></Field>
+          <Field label="CV path" wide><input value={profile.cv_url || ""} onChange={(event) => update("cv_url", event.target.value)} /></Field>
+        </div>
+      </section>
+
+      <section className="panel asset-panel">
+        <div>
+          <span className="section-kicker">Academic file</span>
+          <h2>Curriculum vitae</h2>
+          <p>Upload a PDF without exposing it to a third-party service. Maximum file size: 10 MB.</p>
+        </div>
+        <div className="asset-actions">
+          {profile.cv_url ? <a className="text-button" href={profile.cv_url} target="_blank" rel="noreferrer">Open current CV</a> : null}
+          <label className="button button--secondary upload-button">
+            <FileText size={15} /> Upload PDF
+            <input accept="application/pdf" type="file" onChange={(event) => event.target.files?.[0] && onUploadCv(event.target.files[0])} />
+          </label>
         </div>
       </section>
 
@@ -293,6 +339,7 @@ function PostEditor({ post, setPost, onSave, onDelete, busy }) {
       </div>
       <div className="post-meta-grid">
         <Field label="Title" wide><input className="title-input" placeholder="Untitled article" value={post.title} onChange={(event) => update("title", event.target.value)} /></Field>
+        <Field label="Description" wide><input placeholder="One-sentence summary for search and sharing" value={post.description || ""} onChange={(event) => update("description", event.target.value)} /></Field>
         <Field label="Publish date"><input type="date" value={post.date || today()} onChange={(event) => update("date", event.target.value)} /></Field>
         <Field label="Slug"><input placeholder="article-url" value={post.slug || ""} onChange={(event) => update("slug", event.target.value)} /></Field>
         <Field label="Categories" wide><input placeholder="research, notes" value={(post.categories || []).join(", ")} onChange={(event) => update("categories", event.target.value.split(",").map((item) => item.trim()).filter(Boolean))} /></Field>
@@ -316,14 +363,62 @@ function BlogManager({ posts, post, setPost, onSelect, onNew, onSave, onDelete, 
   );
 }
 
+function PublicationManager({ publications, setPublications, onSave, busy }) {
+  const update = (index, field, value) => setPublications((current) => current.map((publication, itemIndex) => (
+    itemIndex === index ? { ...publication, [field]: value } : publication
+  )));
+  const remove = (index) => {
+    if (!window.confirm("Remove this publication from the website record?")) return;
+    setPublications((current) => current.filter((_publication, itemIndex) => itemIndex !== index));
+  };
+  return (
+    <div className="page-stack">
+      <SectionHeader
+        eyebrow="Canonical record"
+        title="Publications"
+        description="Maintain stable DOI metadata here. Google Scholar only supplies dynamic citation counts."
+        action={<button className="button button--primary" disabled={busy} onClick={onSave} type="button"><Save size={15} /> Save publications</button>}
+      />
+      <div className="publication-editor-list">
+        {publications.map((publication, index) => (
+          <section className="panel publication-editor-card" key={publication.slug || `${publication.title}-${index}`}>
+            <div className="panel-heading">
+              <div><span className="section-kicker">Paper {index + 1}</span><h2>{publication.title || "Untitled publication"}</h2></div>
+              <button aria-label="Remove publication" className="icon-button icon-button--danger" onClick={() => remove(index)} type="button"><Trash2 size={16} /></button>
+            </div>
+            <div className="form-grid">
+              <Field label="Title" wide><input value={publication.title || ""} onChange={(event) => update(index, "title", event.target.value)} /></Field>
+              <Field label="Authors" hint="Separate names with commas." wide><input value={(publication.authors || []).join(", ")} onChange={(event) => update(index, "authors", event.target.value.split(",").map((value) => value.trim()).filter(Boolean))} /></Field>
+              <Field label="Venue"><input value={publication.venue || ""} onChange={(event) => update(index, "venue", event.target.value)} /></Field>
+              <Field label="Short venue"><input value={publication.venue_short || ""} onChange={(event) => update(index, "venue_short", event.target.value)} /></Field>
+              <Field label="Year"><input inputMode="numeric" value={publication.year || ""} onChange={(event) => update(index, "year", event.target.value)} /></Field>
+              <Field label="Pages"><input value={publication.pages || ""} onChange={(event) => update(index, "pages", event.target.value)} /></Field>
+              <Field label="DOI"><input value={publication.doi || ""} onChange={(event) => update(index, "doi", event.target.value)} /></Field>
+              <Field label="arXiv URL"><input type="url" value={publication.arxiv_url || ""} onChange={(event) => update(index, "arxiv_url", event.target.value)} /></Field>
+              <Field label="Scholar title" hint="Must match Scholar exactly for citation lookup." wide><input value={publication.scholar_title || ""} onChange={(event) => update(index, "scholar_title", event.target.value)} /></Field>
+              <Field label="Summary" wide><textarea rows="3" value={publication.summary || ""} onChange={(event) => update(index, "summary", event.target.value)} /></Field>
+              <Field label="Topics" hint="Separate topics with commas." wide><input value={(publication.topics || []).join(", ")} onChange={(event) => update(index, "topics", event.target.value.split(",").map((value) => value.trim()).filter(Boolean))} /></Field>
+              <Field label="BibTeX key"><input value={publication.bibtex_key || ""} onChange={(event) => update(index, "bibtex_key", event.target.value)} /></Field>
+              <Field label="Status"><input value={publication.status || "Published"} onChange={(event) => update(index, "status", event.target.value)} /></Field>
+              <label className="check-field"><input checked={Boolean(publication.selected)} type="checkbox" onChange={(event) => update(index, "selected", event.target.checked)} /><span>Feature on homepage</span></label>
+            </div>
+          </section>
+        ))}
+      </div>
+      <button className="button button--secondary add-publication" onClick={() => setPublications((current) => [...current, emptyPublication()])} type="button"><Plus size={15} /> Add publication</button>
+    </div>
+  );
+}
+
 function ScholarManager({ scholar, onRefresh, busy }) {
+  const [apiKey, setApiKey] = useState("");
   return (
     <div className="page-stack">
       <SectionHeader
         eyebrow="Research footprint"
         title="Google Scholar"
         description="Review the public metrics stored in your site and trigger a secure refresh when needed."
-        action={<button className="button button--primary" disabled={busy} onClick={onRefresh} type="button"><RefreshCw className={busy ? "spin" : ""} size={15} /> Refresh data</button>}
+        action={<button className="button button--primary" disabled={busy} onClick={() => { onRefresh(apiKey); setApiKey(""); }} type="button"><RefreshCw className={busy ? "spin" : ""} size={15} /> Refresh data</button>}
       />
       <div className="metric-grid metric-grid--three">
         <MetricCard label="Citations" value={scholar?.citations ?? "N/A"} detail="All time" />
@@ -343,7 +438,11 @@ function ScholarManager({ scholar, onRefresh, busy }) {
           {!scholar?.articles?.length ? <p className="empty-copy">No Scholar data has been stored yet.</p> : null}
         </div>
       </section>
-      <p className="security-note"><GitBranch size={15} /> Without a local `SERPAPI_API_KEY`, refresh starts the secure GitHub Actions workflow instead.</p>
+      <section className="panel scholar-refresh-panel">
+        <div><span className="section-kicker">Secure manual refresh</span><h2>One-time SerpApi key</h2><p>The key is sent only to the local manager process and is never written to the repository.</p></div>
+        <Field label="API key"><input autoComplete="off" type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="Optional when SERPAPI_API_KEY is set" /></Field>
+      </section>
+      <p className="security-note"><GitBranch size={15} /> Source: {scholar?.source || "Google Scholar"}. Last successful update: {scholar?.updated_at ? new Date(scholar.updated_at).toLocaleString() : "unknown"}.</p>
     </div>
   );
 }
@@ -365,7 +464,7 @@ function PublishManager({ changes, message, setMessage, onRefresh, onPublish, bu
           {busy ? <LoaderCircle className="spin" size={16} /> : <Rocket size={16} />} Commit and push
         </button>
       </section>
-      <p className="security-note"><CircleAlert size={15} /> Publishing only stages the profile, Scholar data, posts, drafts, images, and public website pages.</p>
+      <p className="security-note"><CircleAlert size={15} /> Publishing stages the complete managed site, including layouts, styles, publication data, workflows, CV, and manager source.</p>
     </div>
   );
 }
@@ -373,7 +472,7 @@ function PublishManager({ changes, message, setMessage, onRefresh, onPublish, bu
 function HomepagePreview({ profile, scholar, posts }) {
   return (
     <article className="site-preview-card">
-      <div className="preview-site-nav"><strong>Minggu Wang</strong><span>About&nbsp;&nbsp; Blog</span></div>
+      <div className="preview-site-nav"><strong>Minggu Wang</strong><span>Publications&nbsp;&nbsp; About&nbsp;&nbsp; Writing</span></div>
       <div className="preview-home">
         <img className="preview-crest" src={assetUrl(profile.crest)} alt="" />
         <span>{profile.greeting}</span>
@@ -429,6 +528,7 @@ function PreviewPane({ active, profile, scholar, posts, post, siteUrl }) {
 export default function App() {
   const [data, setData] = useState(null);
   const [profile, setProfile] = useState({});
+  const [publications, setPublications] = useState([]);
   const [active, setActive] = useState("overview");
   const [post, setPost] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -442,6 +542,7 @@ export default function App() {
       const bootstrap = await api.bootstrap();
       setData(bootstrap);
       setProfile(bootstrap.profile);
+      setPublications(bootstrap.publications || []);
     } catch (error) {
       notify(error.message, "error");
     }
@@ -480,6 +581,20 @@ export default function App() {
     notify("Image uploaded. Save the profile to apply it.");
   });
 
+  const uploadCv = (file) => withBusy(async () => {
+    const result = await api.uploadFile(file);
+    setProfile((current) => ({ ...current, cv_url: result.path }));
+    notify("CV uploaded. Save the profile to apply it.");
+  });
+
+  const savePublications = () => withBusy(async () => {
+    const result = await api.savePublications(publications);
+    const status = await api.gitStatus();
+    setPublications(result.publications);
+    setData((current) => ({ ...current, publications: result.publications, changes: status.changes }));
+    notify("Publication record saved locally.");
+  });
+
   const selectPost = async (postPath) => {
     try {
       const result = await api.getPost(postPath);
@@ -508,8 +623,8 @@ export default function App() {
     });
   };
 
-  const refreshScholar = () => withBusy(async () => {
-    const result = await api.refreshScholar();
+  const refreshScholar = (apiKey = "") => withBusy(async () => {
+    const result = await api.refreshScholar(apiKey);
     if (result.scholar) setData((current) => ({ ...current, scholar: result.scholar }));
     notify(result.message);
   });
@@ -539,7 +654,8 @@ export default function App() {
       <Sidebar active={active} onNavigate={navigate} profile={profile} changes={data.changes.length} />
       <main className="workspace">
         {active === "overview" ? <Overview data={{ ...data, profile }} onNavigate={navigate} /> : null}
-        {active === "profile" ? <ProfileEditor profile={profile} setProfile={setProfile} onSave={saveProfile} onUpload={uploadProfileAsset} busy={busy} /> : null}
+        {active === "profile" ? <ProfileEditor profile={profile} setProfile={setProfile} onSave={saveProfile} onUpload={uploadProfileAsset} onUploadCv={uploadCv} busy={busy} /> : null}
+        {active === "publications" ? <PublicationManager publications={publications} setPublications={setPublications} onSave={savePublications} busy={busy} /> : null}
         {active === "blog" ? <BlogManager posts={data.posts} post={post} setPost={setPost} onSelect={selectPost} onNew={() => setPost(emptyPost())} onSave={savePost} onDelete={deletePost} busy={busy} /> : null}
         {active === "scholar" ? <ScholarManager scholar={data.scholar} onRefresh={refreshScholar} busy={busy} /> : null}
         {active === "publish" ? <PublishManager changes={data.changes} message={commitMessage} setMessage={setCommitMessage} onRefresh={refreshGit} onPublish={publish} busy={busy} /> : null}

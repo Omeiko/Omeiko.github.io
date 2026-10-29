@@ -1,15 +1,26 @@
 {
-  "name": "Guzi",
-  "greeting": "Come in and have a seat.",
-  "headline": "AI researcher shaping calm, trustworthy tools.",
-  "summary": "I study multimodal models and their applications to scientific discovery. Recently, I have been helping robotics teams bring language-to-action systems into real labs, while publishing about evaluation and alignment.",
+  "name": "Minggu Wang",
+  "nickname": "Guzi",
+  "greeting": "Minggu Wang · Kyushu University",
+  "headline": "Building reliable AI through evaluation, generation, and testing.",
+  "summary": "I study how AI systems generate, perceive, and fail—from quantum code generation to image editing and autonomous-driving robustness.",
   "email": "wangminggu[at]outlook.com",
-  "crest": "/pics/image.png",
-  "research": "Multimodal reasoning, embodied autonomy, evaluation frameworks.",
-  "collaboration": "Industry labs, open-source communities, and student mentorships.",
-  "current": "Building lightweight eval suites for embodied models, mentoring two graduate students on generalizable manipulation policies, and exploring how AI can support sustainable lab workflows.",
+  "role": "AI researcher",
+  "affiliation": "Kyushu University",
+  "crest": "/pics/image.webp",
+  "research": "AI for software engineering, generative vision, and robustness evaluation.",
+  "collaboration": "Open to research collaborations in AI evaluation, code generation, computer vision, and dependable intelligent systems.",
+  "current": "Connecting benchmark design, generative models, and system-level robustness testing through measurable and reproducible research.",
   "tags": [
-    "Robotics",
-    "AI safety"
-  ]
+    "AI for Software Engineering",
+    "Generative Vision",
+    "Robustness & Evaluation"
+  ],
+  "scholar_url": "https://scholar.google.com/citations?user=1xge3_oAAAAJ",
+  "openalex_url": "https://openalex.org/A5068827901",
+  "conference_url": "https://conf.researchr.org/profile/mingguwang",
+  "github_url": "https://github.com/Omeiko",
+  "orcid_url": "",
+  "dblp_url": "",
+  "cv_url": "/output/pdf/minggu-wang-cv.pdf"
 }

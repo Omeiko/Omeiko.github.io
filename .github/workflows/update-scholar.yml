@@ -3,7 +3,9 @@ name: Update Google Scholar data
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 3 * * *"
+    # Weekly is frequent enough for a personal research profile and preserves API quota.
+    # Changing this schedule also reactivates workflows disabled after repository inactivity.
+    - cron: "37 3 * * 1"
 
 permissions:
   contents: write
@@ -15,6 +17,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Check out repository
@@ -42,20 +45,23 @@ jobs:
             --data-urlencode "api_key=${SERPAPI_API_KEY}" \
             --output "$response_file"
 
-          jq --exit-status '
+          jq --exit-status --arg profile_id "$SCHOLAR_PROFILE_ID" '
             if .error then
               error(.error)
             else
               {
+                source: "Google Scholar",
+                profile_id: $profile_id,
+                profile_url: ("https://scholar.google.com/citations?user=" + $profile_id),
+                updated_at: (now | todateiso8601),
                 citations: ([.cited_by.table[] | select(.citations) | .citations.all][0] // 0),
                 h_index: ([.cited_by.table[] | select(.h_index) | .h_index.all][0] // 0),
                 i10_index: ([.cited_by.table[] | select(.i10_index) | .i10_index.all][0] // 0),
                 articles: [
-                  (.articles // [])[:4][] |
+                  (.articles // [])[:20][] |
                   {
                     title,
                     link,
-                    publication,
                     year,
                     citations: (.cited_by.value // 0)
                   }
@@ -64,8 +70,24 @@ jobs:
             end
           ' "$response_file" > "$output_file"
 
+          jq --exit-status '
+            (.source == "Google Scholar") and
+            (.profile_id | length > 0) and
+            (.citations | type == "number") and
+            (.articles | type == "array")
+          ' "$output_file" > /dev/null
+
           mkdir -p _data
           mv "$output_file" _data/scholar.json
+
+          {
+            echo "### Google Scholar refresh"
+            echo
+            echo "- Citations: $(jq -r '.citations' _data/scholar.json)"
+            echo "- h-index: $(jq -r '.h_index' _data/scholar.json)"
+            echo "- Papers returned: $(jq -r '.articles | length' _data/scholar.json)"
+            echo "- Updated: $(jq -r '.updated_at' _data/scholar.json)"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit updated data
         run: |

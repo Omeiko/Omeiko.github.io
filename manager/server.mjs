@@ -11,6 +11,8 @@ const managerRoot = path.dirname(fileURLToPath(import.meta.url));
 const siteRoot = path.resolve(managerRoot, "..");
 const profilePath = path.join(siteRoot, "_data", "profile.json");
 const scholarPath = path.join(siteRoot, "_data", "scholar.json");
+const publicationsPath = path.join(siteRoot, "_data", "publications.json");
+const bibliographyPath = path.join(siteRoot, "assets", "bibliography", "publications.bib");
 const postRoots = [path.join(siteRoot, "_posts"), path.join(siteRoot, "_drafts")];
 const port = Number(process.env.MANAGER_API_PORT || 4174);
 
@@ -28,6 +30,15 @@ const upload = multer({
   }
 });
 
+const documentUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_request, file, callback) => {
+    const allowed = file.mimetype === "application/pdf";
+    callback(allowed ? null : new Error("Only PDF files are supported."), allowed);
+  }
+});
+
 function sendError(response, error, status = 500) {
   console.error(error);
   response.status(status).json({ error: error instanceof Error ? error.message : String(error) });
@@ -38,7 +49,9 @@ async function ensureDirectories() {
     fs.mkdir(path.dirname(profilePath), { recursive: true }),
     fs.mkdir(path.join(siteRoot, "_posts"), { recursive: true }),
     fs.mkdir(path.join(siteRoot, "_drafts"), { recursive: true }),
-    fs.mkdir(path.join(siteRoot, "pics"), { recursive: true })
+    fs.mkdir(path.join(siteRoot, "pics"), { recursive: true }),
+    fs.mkdir(path.join(siteRoot, "assets", "files"), { recursive: true }),
+    fs.mkdir(path.dirname(bibliographyPath), { recursive: true })
   ]);
 }
 
@@ -58,13 +71,68 @@ async function writeJsonAtomic(filePath, value) {
   await fs.rename(temporaryPath, filePath);
 }
 
+async function writeTextAtomic(filePath, value) {
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  const temporaryPath = `${filePath}.${process.pid}.tmp`;
+  await fs.writeFile(temporaryPath, value, "utf8");
+  await fs.rename(temporaryPath, filePath);
+}
+
 function normalizeProfile(input) {
-  const textFields = ["name", "greeting", "headline", "summary", "email", "crest", "research", "collaboration", "current"];
+  const textFields = [
+    "name", "nickname", "greeting", "headline", "summary", "email", "role", "affiliation",
+    "crest", "research", "collaboration", "current", "scholar_url", "openalex_url",
+    "conference_url", "github_url", "orcid_url", "dblp_url", "cv_url"
+  ];
   const profile = Object.fromEntries(textFields.map((field) => [field, String(input[field] || "").trim()]));
   profile.tags = Array.isArray(input.tags)
     ? input.tags.map((tag) => String(tag).trim()).filter(Boolean).slice(0, 12)
     : [];
   return profile;
+}
+
+function normalizePublication(input, index) {
+  const title = String(input.title || "").trim();
+  if (!title) throw new Error(`Publication ${index + 1} needs a title.`);
+  const doi = String(input.doi || "").trim().replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, "");
+  const text = (field) => String(input[field] || "").trim();
+  const list = (field) => (Array.isArray(input[field]) ? input[field] : String(input[field] || "").split(","))
+    .map((value) => String(value).trim()).filter(Boolean);
+  return {
+    slug: slugify(input.slug || title),
+    title,
+    scholar_title: text("scholar_title") || title,
+    authors: list("authors"),
+    venue: text("venue"),
+    venue_short: text("venue_short"),
+    year: Number.parseInt(input.year, 10) || new Date().getFullYear(),
+    pages: text("pages"),
+    doi,
+    doi_url: doi ? `https://doi.org/${doi}` : "",
+    arxiv_url: text("arxiv_url"),
+    summary: text("summary"),
+    topics: list("topics"),
+    bibtex_key: text("bibtex_key"),
+    selected: Boolean(input.selected),
+    status: text("status") || "Published"
+  };
+}
+
+function publicationsToBibtex(publications) {
+  return `${publications.map((publication) => {
+    const key = publication.bibtex_key || `${publication.authors[0]?.split(" ").at(-1)?.toLowerCase() || "paper"}${publication.year}`;
+    const pages = publication.pages.replace(/[–—]/g, "--");
+    return `@inproceedings{${key},\n` +
+      `  author    = {${publication.authors.join(" and ")}},\n` +
+      `  title     = {${publication.title}},\n` +
+      `  booktitle = {${publication.venue}${publication.venue_short ? ` (${publication.venue_short.replace(/\s+\d{4}$/, "")})` : ""}},\n` +
+      `  pages     = {${pages}},\n` +
+      `  publisher = {IEEE},\n` +
+      `  year      = {${publication.year}},\n` +
+      `  doi       = {${publication.doi}},\n` +
+      `  url       = {${publication.doi_url}}\n` +
+      `}`;
+  }).join("\n\n")}\n`;
 }
 
 function toSiteRelative(absolutePath) {
@@ -134,6 +202,7 @@ async function readPost(filePath, includeBody = true) {
     title: String(parsed.data.title || postSlug(filePath, draft)),
     date: postDate(parsed.data, filePath),
     categories,
+    description: String(parsed.data.description || ""),
     draft,
     slug: postSlug(filePath, draft),
     excerpt: body.replace(/[#>*_`\[\]()!-]/g, " ").replace(/\s+/g, " ").trim().slice(0, 150),
@@ -167,6 +236,7 @@ async function savePost(input) {
   const frontMatter = {
     layout: "post",
     title,
+    ...(String(input.description || "").trim() ? { description: String(input.description).trim() } : {}),
     ...(draft ? {} : { date: `${date} 12:00:00 +0900` }),
     categories: normalizeCategories(input.categories)
   };
@@ -218,13 +288,16 @@ async function refreshScholarLocally(apiKey) {
 
   const table = payload.cited_by?.table || [];
   const data = {
+    source: "Google Scholar",
+    profile_id: profileId,
+    profile_url: `https://scholar.google.com/citations?user=${profileId}`,
+    updated_at: new Date().toISOString(),
     citations: scholarMetric(table, "citations"),
     h_index: scholarMetric(table, "h_index"),
     i10_index: scholarMetric(table, "i10_index"),
-    articles: (payload.articles || []).slice(0, 4).map((article) => ({
+    articles: (payload.articles || []).slice(0, 20).map((article) => ({
       title: article.title || "Untitled",
       link: article.link || "",
-      publication: article.publication || "",
       year: article.year || "",
       citations: article.cited_by?.value || 0
     }))
@@ -241,6 +314,7 @@ app.get("/api/bootstrap", async (_request, response) => {
     response.json({
       profile: await readJson(profilePath, {}),
       scholar: await readJson(scholarPath, null),
+      publications: await readJson(publicationsPath, []),
       posts: await listPosts(),
       changes: await gitStatus(),
       siteUrl: "https://minggu.wang"
@@ -257,6 +331,18 @@ app.put("/api/profile", async (request, response) => {
     response.json({ profile });
   } catch (error) {
     sendError(response, error, error.status || 400);
+  }
+});
+
+app.put("/api/publications", async (request, response) => {
+  try {
+    if (!Array.isArray(request.body)) throw new Error("Publications must be an array.");
+    const publications = request.body.map(normalizePublication);
+    await writeJsonAtomic(publicationsPath, publications);
+    await writeTextAtomic(bibliographyPath, publicationsToBibtex(publications));
+    response.json({ publications });
+  } catch (error) {
+    sendError(response, error, 400);
   }
 });
 
@@ -303,17 +389,41 @@ app.post("/api/assets", upload.single("asset"), async (request, response) => {
   }
 });
 
-app.post("/api/scholar/refresh", async (_request, response) => {
+app.post("/api/files", documentUpload.single("file"), async (request, response) => {
   try {
-    if (process.env.SERPAPI_API_KEY) {
-      const scholar = await refreshScholarLocally(process.env.SERPAPI_API_KEY);
+    if (!request.file) throw new Error("Choose a PDF to upload.");
+    const basename = slugify(path.basename(request.file.originalname, path.extname(request.file.originalname)));
+    let filename = `${basename}.pdf`;
+    let targetPath = path.join(siteRoot, "assets", "files", filename);
+    if (existsSync(targetPath)) {
+      filename = `${basename}-${Date.now()}.pdf`;
+      targetPath = path.join(siteRoot, "assets", "files", filename);
+    }
+    await fs.writeFile(targetPath, request.file.buffer);
+    response.json({ path: `/assets/files/${filename}` });
+  } catch (error) {
+    sendError(response, error, 400);
+  }
+});
+
+app.post("/api/scholar/refresh", async (request, response) => {
+  try {
+    const apiKey = String(request.body?.apiKey || process.env.SERPAPI_API_KEY || "").trim();
+    if (apiKey) {
+      const scholar = await refreshScholarLocally(apiKey);
       response.json({ mode: "local", scholar, message: "Scholar data updated locally." });
       return;
     }
-    await runCommand("gh", ["workflow", "run", "update-scholar.yml"]);
-    response.json({ mode: "github", message: "GitHub Scholar workflow started." });
+    try {
+      await runCommand("gh", ["workflow", "run", "update-scholar.yml"]);
+      response.json({ mode: "github", message: "GitHub Scholar workflow started." });
+    } catch {
+      const error = new Error("Enter a SerpApi key for this refresh, set SERPAPI_API_KEY before starting the manager, or run the Scholar workflow from GitHub Actions.");
+      error.status = 409;
+      throw error;
+    }
   } catch (error) {
-    sendError(response, new Error(`${error.message} Set SERPAPI_API_KEY locally or authenticate GitHub CLI.`), 400);
+    sendError(response, error, error.status || 400);
   }
 });
 
@@ -328,7 +438,13 @@ app.get("/api/git-status", async (_request, response) => {
 app.post("/api/publish", async (request, response) => {
   try {
     const message = String(request.body.message || "Update website content").trim().slice(0, 120);
-    await runCommand("git", ["add", "-A", "--", "_data", "_posts", "_drafts", "pics", "index.markdown", "blog.markdown", "about.markdown"]);
+    await runCommand("git", [
+      "add", "-A", "--",
+      ".github", "_config.yml", "_data", "_drafts", "_layouts", "_posts",
+      "assets", "output", "pics", "manager", "404.html", "about.markdown",
+      "blog.markdown", "index.markdown", "publications.markdown", "robots.txt",
+      "scripts", "Gemfile", ".gitattributes", ".gitignore"
+    ]);
     const diff = await runCommand("git", ["diff", "--cached", "--quiet"], { allowedExitCodes: [0, 1] });
     if (diff.code === 0) {
       response.json({ published: false, message: "No managed website changes to publish.", changes: await gitStatus() });

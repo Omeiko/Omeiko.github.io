@@ -14,6 +14,7 @@ async function request(path, options = {}) {
 export const api = {
   bootstrap: () => request("/api/bootstrap"),
   saveProfile: (profile) => request("/api/profile", { method: "PUT", body: JSON.stringify(profile) }),
+  savePublications: (publications) => request("/api/publications", { method: "PUT", body: JSON.stringify(publications) }),
   getPost: (postPath) => request(`/api/post?path=${encodeURIComponent(postPath)}`),
   savePost: (post) => request("/api/post", { method: "PUT", body: JSON.stringify(post) }),
   deletePost: (postPath) => request(`/api/post?path=${encodeURIComponent(postPath)}`, { method: "DELETE" }),
@@ -22,7 +23,12 @@ export const api = {
     form.append("asset", file);
     return request("/api/assets", { method: "POST", body: form });
   },
-  refreshScholar: () => request("/api/scholar/refresh", { method: "POST" }),
+  uploadFile: (file) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request("/api/files", { method: "POST", body: form });
+  },
+  refreshScholar: (apiKey = "") => request("/api/scholar/refresh", { method: "POST", body: JSON.stringify({ apiKey }) }),
   gitStatus: () => request("/api/git-status"),
   publish: (message) => request("/api/publish", { method: "POST", body: JSON.stringify({ message }) })
 };
